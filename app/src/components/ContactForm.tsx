@@ -2,10 +2,10 @@
 
 import { useState, type FormEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { Send, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, ChevronDown, Loader2 } from 'lucide-react';
 import Button from './Button';
 
-type FormState = 'idle' | 'error' | 'success';
+type FormState = 'idle' | 'submitting' | 'error' | 'success';
 
 interface ContactFormProps {
   className?: string;
@@ -14,6 +14,9 @@ interface ContactFormProps {
 
 export default function ContactForm({ className, fullWidthButton = false }: ContactFormProps) {
   const [formState, setFormState] = useState<FormState>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,9 +30,10 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setFormState('idle');
+    setErrorMessage('');
     setFieldErrors({});
 
     const errors: Record<string, boolean> = {};
@@ -41,10 +45,53 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setFormState('error');
+      setErrorMessage('Bitte korrigieren Sie die markierten Felder.');
       return;
     }
 
-    setFormState('success');
+    setFormState('submitting');
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          _honeypot: honeypot,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Ein Fehler ist aufgetreten.');
+      }
+
+      setFormState('success');
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        service: '',
+        message: '',
+      });
+    } catch (err: any) {
+      setFormState('error');
+      if (err.name === 'AbortError') {
+        setErrorMessage('Zeitüberschreitung. Bitte überprüfen Sie Ihre Internetverbindung.');
+      } else {
+        setErrorMessage(err.message || 'Netzwerkfehler. Bitte versuchen Sie es später erneut.');
+      }
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -75,7 +122,7 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
         <div className="flex items-start gap-3 p-4 rounded-md border border-red-500 bg-red-50">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-800">Bitte korrigieren Sie die markierten Felder.</p>
+            <p className="text-sm font-medium text-red-800">{errorMessage}</p>
           </div>
         </div>
       )}
@@ -86,9 +133,11 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
           placeholder="Ihr Name *"
           value={formData.name}
           onChange={e => handleChange('name', e.target.value)}
+          disabled={formState === 'submitting'}
           className={cn(
             'w-full px-4 py-3 rounded-md border text-[15px] text-slate-700 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10',
-            fieldErrors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300'
+            fieldErrors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300',
+            formState === 'submitting' && 'opacity-60 cursor-not-allowed'
           )}
         />
       </div>
@@ -99,9 +148,11 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
           placeholder="ihre@email.de *"
           value={formData.email}
           onChange={e => handleChange('email', e.target.value)}
+          disabled={formState === 'submitting'}
           className={cn(
             'w-full px-4 py-3 rounded-md border text-[15px] text-slate-700 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10',
-            fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300'
+            fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300',
+            formState === 'submitting' && 'opacity-60 cursor-not-allowed'
           )}
         />
       </div>
@@ -112,7 +163,11 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
           placeholder="Ihr Unternehmen (optional)"
           value={formData.company}
           onChange={e => handleChange('company', e.target.value)}
-          className="w-full px-4 py-3 rounded-md border border-slate-300 text-[15px] text-slate-700 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10"
+          disabled={formState === 'submitting'}
+          className={cn(
+            "w-full px-4 py-3 rounded-md border border-slate-300 text-[15px] text-slate-700 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10",
+            formState === 'submitting' && 'opacity-60 cursor-not-allowed'
+          )}
         />
       </div>
 
@@ -120,10 +175,12 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
         <select
           value={formData.service}
           onChange={e => handleChange('service', e.target.value)}
+          disabled={formState === 'submitting'}
           className={cn(
             'w-full px-4 py-3 rounded-md border text-[15px] text-slate-700 transition-all duration-200 outline-none focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10 appearance-none bg-white',
             !formData.service && 'text-slate-400',
-            fieldErrors.service ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300'
+            fieldErrors.service ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300',
+            formState === 'submitting' && 'opacity-60 cursor-not-allowed'
           )}
         >
           <option value="" disabled>Gewünschte Leistung *</option>
@@ -144,20 +201,41 @@ export default function ContactForm({ className, fullWidthButton = false }: Cont
           placeholder="Beschreiben Sie Ihr Projekt... *"
           value={formData.message}
           onChange={e => handleChange('message', e.target.value)}
+          disabled={formState === 'submitting'}
           className={cn(
             'w-full px-4 py-3 rounded-md border text-[15px] text-slate-700 placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10 resize-vertical',
-            fieldErrors.message ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300'
+            fieldErrors.message ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10' : 'border-slate-300',
+            formState === 'submitting' && 'opacity-60 cursor-not-allowed'
           )}
         />
       </div>
 
+      {/* Honeypot field - invisible to users */}
+      <input 
+        type="text" 
+        name="_honeypot" 
+        value={honeypot} 
+        onChange={(e) => setHoneypot(e.target.value)} 
+        style={{ display: 'none' }} 
+        tabIndex={-1} 
+        autoComplete="off" 
+      />
+
       <Button
         type="submit"
         variant="primary"
-        icon={Send}
+        icon={formState === 'submitting' ? undefined : Send}
         fullWidth={fullWidthButton}
+        disabled={formState === 'submitting'}
       >
-        Nachricht senden
+        {formState === 'submitting' ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Wird gesendet...
+          </span>
+        ) : (
+          <>Nachricht senden</>
+        )}
       </Button>
     </form>
   );

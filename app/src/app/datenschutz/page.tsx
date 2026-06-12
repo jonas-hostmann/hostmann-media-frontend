@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PuckPageRenderer from "@/components/PuckPageRenderer";
 
 export const metadata: Metadata = {
   title: "Datenschutz",
@@ -7,7 +8,10 @@ export const metadata: Metadata = {
 
 export default function DatenschutzPage() {
   return (
-    <section className="bg-white pt-28 pb-20 md:pt-32 md:pb-24">
+    <PuckPageRenderer
+      path="/datenschutz"
+      fallback={
+        <section className="bg-white pt-28 pb-20 md:pt-32 md:pb-24">
       <div className="max-w-[720px] mx-auto px-4 md:px-6 lg:px-8">
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-12">
           Datenschutzerklärung
@@ -113,5 +117,7 @@ export default function DatenschutzPage() {
         </div>
       </div>
     </section>
+      }
+    />
   );
 }

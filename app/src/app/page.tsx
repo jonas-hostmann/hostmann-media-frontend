@@ -4,16 +4,22 @@ import About from "@/components/About";
 import BlogPreview from "@/components/BlogPreview";
 import CTASection from "@/components/CTA";
 import ContactSection from "@/components/ContactSection";
+import PuckPageRenderer from "@/components/PuckPageRenderer";
 
 export default function Home() {
   return (
-    <>
-      <Hero />
-      <Services />
-      <About />
-      <BlogPreview />
-      <CTASection />
-      <ContactSection />
-    </>
+    <PuckPageRenderer
+      path="/"
+      fallback={
+        <>
+          <Hero />
+          <Services />
+          <About />
+          <BlogPreview />
+          <CTASection />
+          <ContactSection />
+        </>
+      }
+    />
   );
 }

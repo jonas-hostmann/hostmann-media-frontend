@@ -13,6 +13,7 @@ interface ButtonProps {
   icon?: LucideIcon;
   className?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 export default function Button({
@@ -25,6 +26,7 @@ export default function Button({
   icon: Icon,
   className,
   fullWidth = false,
+  disabled = false,
 }: ButtonProps) {
   const baseClasses = cn(
     'inline-flex items-center justify-center gap-2 font-medium transition-all duration-300 rounded-full cursor-pointer',
@@ -35,6 +37,7 @@ export default function Button({
     variant === 'secondary' && 'bg-transparent border-[1.5px] border-primary-600 text-primary-700 hover:bg-primary-50 hover:-translate-y-0.5',
     variant === 'white' && 'bg-white text-primary-700 hover:bg-primary-50 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)]',
     variant === 'ghost' && 'bg-transparent border-[1.5px] border-white/30 text-white hover:bg-white/10 hover:border-white/50',
+    disabled && 'opacity-60 cursor-not-allowed pointer-events-none hover:translate-y-0',
     className
   );
 
@@ -55,7 +58,7 @@ export default function Button({
   }
 
   return (
-    <button type={type} className={cn(baseClasses, 'group')} onClick={onClick}>
+    <button type={type} className={cn(baseClasses, 'group')} onClick={onClick} disabled={disabled}>
       {content}
     </button>
   );

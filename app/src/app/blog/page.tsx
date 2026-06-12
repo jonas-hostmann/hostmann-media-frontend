@@ -4,6 +4,7 @@ import { getPosts, type Post } from "@/lib/wordpress";
 import SectionHeader from "@/components/SectionHeader";
 import BlogCard from "@/components/BlogCard";
 import CTASection from "@/components/CTA";
+import PuckPageRenderer from "@/components/PuckPageRenderer";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -23,8 +24,11 @@ export default async function BlogPage() {
   }
 
   return (
-    <>
-      {/* Hero */}
+    <PuckPageRenderer
+      path="/blog"
+      fallback={
+        <>
+          {/* Hero */}
       <section className="relative bg-primary-900 pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-white/5 blur-[100px]" />
@@ -85,5 +89,7 @@ export default async function BlogPage() {
         secondaryButton={{ label: "RSS-Feed", href: "#" }}
       />
     </>
+      }
+    />
   );
 }

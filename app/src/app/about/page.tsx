@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GraduationCap, User, Sparkles, Flame, Target, Award, Code, Globe, Layers } from "lucide-react";
 import CTASection from "@/components/CTA";
 import SectionHeader from "@/components/SectionHeader";
+import PuckPageRenderer from "@/components/PuckPageRenderer";
 
 export const metadata: Metadata = {
   title: "Über mich",
@@ -29,8 +30,11 @@ const timeline = [
 
 export default function AboutPage() {
   return (
-    <>
-      {/* Hero */}
+    <PuckPageRenderer
+      path="/about"
+      fallback={
+        <>
+          {/* Hero */}
       <section className="bg-primary-900 pt-28 pb-16 md:pt-32 md:pb-20">
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -136,5 +140,7 @@ export default function AboutPage() {
         secondaryButton={{ label: "Leistungen entdecken", href: "/leistungen" }}
       />
     </>
+      }
+    />
   );
 }

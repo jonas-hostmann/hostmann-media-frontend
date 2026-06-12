@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Globe, Search, Code, Megaphone, BarChart3, Smartphone, CheckCircle } from "lucide-react";
 import CTASection from "@/components/CTA";
 import SectionHeader from "@/components/SectionHeader";
+import PuckPageRenderer from "@/components/PuckPageRenderer";
 
 export const metadata: Metadata = {
   title: "Leistungen",
@@ -84,8 +85,11 @@ const services: ServiceDetail[] = [
 
 export default function LeistungenPage() {
   return (
-    <>
-      {/* Sub Hero */}
+    <PuckPageRenderer
+      path="/leistungen"
+      fallback={
+        <>
+          {/* Sub Hero */}
       <section className="relative bg-primary-900 pt-28 pb-16 md:pt-32 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-white/5 blur-[100px]" />
@@ -154,6 +158,8 @@ export default function LeistungenPage() {
         secondaryButton={{ label: "Zurück zur Startseite", href: "/" }}
       />
     </>
+      }
+    />
   );
 }
 
